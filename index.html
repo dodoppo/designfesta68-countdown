@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>デザインフェスタ 2028冬 カウントダウン</title>
+<style>
+:root{--bg:#fffaf3;--fg:#1d1b2e;--sub:#6b6880;--card:#ffffff;--line:#e9e2d6;--a:#ff5a3c;--b:#5b4bff}
+@media (prefers-color-scheme:dark){:root{--bg:#14121f;--fg:#f4f1ff;--sub:#a49fc0;--card:#1e1b2e;--line:#322e48;--a:#ff7a5e;--b:#8c80ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;display:flex;justify-content:center}
+main{width:100%;max-width:640px;padding:28px 18px 40px;text-align:center}
+.tag{display:inline-block;font-size:12px;letter-spacing:.12em;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:4px 12px}
+h1{font-size:clamp(24px,7vw,36px);margin:14px 0 4px;line-height:1.25;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.date{color:var(--sub);font-size:14px;margin:0 0 24px}
+.big{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 12px;margin-bottom:12px}
+.big .n{font-size:clamp(64px,22vw,112px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.big .u{font-size:18px;color:var(--sub);margin-left:6px}
+.big .l{color:var(--sub);font-size:13px;margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 4px}
+.cell b{display:block;font-size:clamp(26px,8vw,38px);font-variant-numeric:tabular-nums}
+.cell span{font-size:12px;color:var(--sub)}
+.bar{height:8px;background:var(--line);border-radius:99px;margin:22px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:width .6s}
+.pl{font-size:12px;color:var(--sub);display:flex;justify-content:space-between}
+.msg{margin:22px 0 0;font-size:16px;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">DESIGN FESTA</span>
+  <h1 id="title"></h1>
+  <p class="date" id="date"></p>
+  <div class="big"><span class="n" id="d">0</span><span class="u">日</span><div class="l" id="lbl">開催まで あと</div></div>
+  <div class="grid">
+    <div class="cell"><b id="h">00</b><span>時間</span></div>
+    <div class="cell"><b id="m">00</b><span>分</span></div>
+    <div class="cell"><b id="s">00</b><span>秒</span></div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="pl"><span>カウントダウン開始</span><span id="pp"></span></div>
+  <p class="msg" id="msg"></p>
+</main>
+<script>
+// ★ここを書き換えれば日程・名称を変更できます（日本時間）
+var EVENT_NAME = "デザインフェスタ 2028冬";
+var EVENT_DATE = "2028-11-11T11:00";   // 仮設定：正式日程が出たら修正
+var START = new Date("2026-11-15T00:00:00+09:00").getTime();
+
+var $ = function(i){return document.getElementById(i)};
+var pad = function(n){return String(n).padStart(2,"0")};
+var target = new Date(EVENT_DATE + ":00+09:00").getTime();
+
+$("title").textContent = EVENT_NAME;
+document.title = EVENT_NAME + " カウントダウン";
+var t = new Date(target + 9*3600000);
+$("date").textContent = t.getUTCFullYear()+"年"+(t.getUTCMonth()+1)+"月"+t.getUTCDate()+"日（"+"日月火水木金土"[t.getUTCDay()]+"）"+pad(t.getUTCHours())+":"+pad(t.getUTCMinutes())+" 開始予定";
+
+function tick(){
+  var now = Date.now(), diff = target - now;
+  if (diff <= 0){
+    $("d").textContent="0";
+    $("h").textContent=$("m").textContent=$("s").textContent="00";
+    $("lbl").textContent="開催日になりました";
+    $("bar").style.width="100%"; $("pp").textContent="100%";
+    $("msg").textContent="いよいよ開催です！会場で会いましょう";
+    return;
+  }
+  var sec = Math.floor(diff/1000);
+  var d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.floor(sec%3600/60), s = sec%60;
+  $("d").textContent = d.toLocaleString("ja-JP");
+  $("h").textContent = pad(h); $("m").textContent = pad(m); $("s").textContent = pad(s);
+  var span = target - START;
+  var pr = span>0 ? Math.min(100, Math.max(0,(now-START)/span*100)) : 0;
+  $("bar").style.width = pr.toFixed(1)+"%";
+  $("pp").textContent = pr.toFixed(1)+"%";
+  var wk = Math.floor(d/7);
+  $("msg").textContent = d>=365 ? "まだ1年以上先。作品づくりをじっくり進めましょう"
+    : d>=100 ? "約"+wk+"週間。構想を固める時期です"
+    : d>=30 ? "あと"+d+"日。制作・準備が本番モードに"
+    : d>=7 ? "ラストスパート。搬入準備を確認しましょう"
+    : d>=1 ? "もうすぐ！最終チェックの時間です"
+    : "いよいよ当日です";
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
